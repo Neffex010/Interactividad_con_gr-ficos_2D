@@ -1,6 +1,6 @@
 /**
- * BUBBLE HUNTER 2D - Lógica del Juego
- * Refactorizado para: Luis Enrique Cabrera García
+ * BUBBLE HUNTER 2D - Versión Visual (Partículas)
+ * Desarrollado por: Luis Enrique Cabrera García
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -13,7 +13,8 @@ const GAME_CONFIG = {
     MIN_RADIUS: 15,
     MAX_RADIUS: 35,
     SPAWN_CHANCE: 0.05,
-    COLORS: ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#33FFF5', '#F5FF33'] // Colores predefinidos o aleatorios
+    PARTICLE_COUNT: 12, // Cantidad de fragmentos por explosión
+    COLORS: ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#33FFF5', '#F5FF33']
 };
 
 // --- ELEMENTOS DEL DOM ---
@@ -29,6 +30,7 @@ const ui = {
 // --- ESTADO DEL JUEGO ---
 let state = {
     objects: [],
+    particles: [], // Nuevo array para efectos visuales
     eliminatedCount: 0,
     currentLevel: 1,
     spawnedInLevel: 0,
@@ -61,14 +63,14 @@ canvas.addEventListener('mouseleave', () => {
 canvas.addEventListener('click', () => {
     state.objects.forEach(obj => {
         if (!obj.isFading && obj.isHovered(mouse.x, mouse.y)) {
-            obj.startFadeOut();
+            obj.explode(); // Ahora llamamos a explode en lugar de solo fade
         }
     });
 });
 
 ui.restartBtn.addEventListener('click', () => location.reload());
 
-// --- UTILIDADES DE FÍSICA (Tu lógica original intacta) ---
+// --- UTILIDADES DE FÍSICA ---
 function rotate(velocity, angle) {
     return {
         x: velocity.x * Math.cos(angle) - velocity.y * Math.sin(angle),
@@ -82,7 +84,6 @@ function resolveCollision(particle, otherParticle) {
     const xDist = otherParticle.x - particle.x;
     const yDist = otherParticle.y - particle.y;
 
-    // Prevenir superposición accidental
     if (xVelocityDiff * xDist + yVelocityDiff * yDist >= 0) {
         const angle = -Math.atan2(otherParticle.y - particle.y, otherParticle.x - particle.x);
         const m1 = particle.mass;
@@ -104,22 +105,66 @@ function resolveCollision(particle, otherParticle) {
     }
 }
 
+// --- CLASE PARTÍCULA (NUEVO) ---
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = Math.random() * 3 + 2; // Tamaño aleatorio pequeño
+        this.color = color;
+        this.opacity = 1;
+        
+        // Explosión rápida en todas direcciones
+        const velocityMultiplier = Math.random() * 5 + 2; 
+        const angle = Math.random() * Math.PI * 2;
+        
+        this.velocity = {
+            x: Math.cos(angle) * velocityMultiplier,
+            y: Math.sin(angle) * velocityMultiplier
+        };
+        
+        this.friction = 0.95; // Para que se frenen gradualmente
+        this.gravity = 0.2;   // Para que caigan un poco
+    }
+
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    update() {
+        this.draw();
+        
+        // Física simple
+        this.velocity.x *= this.friction;
+        this.velocity.y *= this.friction;
+        this.velocity.y += this.gravity;
+        
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+        
+        // Desvanecer
+        this.opacity -= 0.03;
+    }
+}
+
 // --- CLASE CÍRCULO ---
 class Circle {
-    // Constructor limpio: recibe valores ya calculados
     constructor(x, y, radius, level) {
         this.x = x;
         this.y = y;
         this.radius = radius;
-        this.mass = radius; 
-        
-        // Velocidad basada en el nivel
+        this.mass = radius;
         const speedBase = 1 + (level * 0.5); 
         this.velocity = {
             x: (Math.random() - 0.5) * 2, 
-            y: -speedBase // Flotan hacia arriba por defecto
+            y: -speedBase 
         };
-        
         this.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
         this.hoverColor = '#ffc107'; 
         this.opacity = 1;
@@ -150,10 +195,10 @@ class Circle {
     update(circles) {
         this.draw();
 
-        // Lógica de muerte (fade out)
+        // Si explota, se desvanece MUY rápido para dar paso a las partículas
         if (this.isFading) {
-            this.opacity -= 0.05;
-            this.radius += 0.5; // Efecto visual "pop"
+            this.opacity -= 0.2; // Desaparece casi al instante
+            this.radius += 2;    // Expansión rápida antes de desaparecer
             if (this.opacity <= 0) {
                 this.markedForDeletion = true;
                 state.eliminatedCount++;
@@ -162,39 +207,32 @@ class Circle {
             return;
         }
 
-        // Detección de Colisiones
+        // Colisiones
         for (let i = 0; i < circles.length; i++) {
             if (this === circles[i]) continue;
             if (circles[i].isFading) continue;
 
             const dist = Math.hypot(this.x - circles[i].x, this.y - circles[i].y);
-
             if (dist - (this.radius + circles[i].radius) < 0) {
                 resolveCollision(this, circles[i]);
             }
         }
 
-        // Rebote en paredes laterales
+        // Rebotes
         if (this.x + this.radius >= canvas.width || this.x - this.radius <= 0) {
             this.velocity.x = -this.velocity.x;
-            // Corrección simple para que no se pegue a la pared
             if(this.x + this.radius >= canvas.width) this.x = canvas.width - this.radius;
             if(this.x - this.radius <= 0) this.x = this.radius;
         }
         
-        // Rebote en el piso (si caen por choque)
-        // NOTA: Solo rebotan si ya estaban DENTRO del canvas.
-        // Si están naciendo (y > canvas.height), dejamos que suban.
         if (this.y + this.radius >= canvas.height && this.velocity.y > 0) {
-             this.velocity.y = -this.velocity.y * 0.8; // Rebote con fricción
+             this.velocity.y = -this.velocity.y * 0.8;
              this.y = canvas.height - this.radius;
         }
 
-        // Aplicar movimiento
         this.x += this.velocity.x;
         this.y += this.velocity.y;
 
-        // Eliminar si sale por el techo completamente
         if (this.y + this.radius < 0) {
             this.markedForDeletion = true;
         }
@@ -205,11 +243,17 @@ class Circle {
         return Math.hypot(this.x - mx, this.y - my) < this.radius;
     }
 
-    startFadeOut() {
+    // Nuevo método que combina el fade con la generación de partículas
+    explode() {
         if (!this.isFading) {
             this.isFading = true;
             this.velocity.x = 0;
             this.velocity.y = 0;
+            
+            // Generar partículas en la posición actual
+            for (let i = 0; i < GAME_CONFIG.PARTICLE_COUNT; i++) {
+                state.particles.push(new Particle(this.x, this.y, this.color));
+            }
         }
     }
 }
@@ -225,13 +269,10 @@ function updateStats() {
 function spawnEnemies() {
     if (state.spawnedInLevel < GAME_CONFIG.GROUP_SIZE) {
         if (Math.random() < GAME_CONFIG.SPAWN_CHANCE) { 
-            
-            // 1. Calcular propiedades ANTES de crear el objeto
             let radius = Math.random() * (GAME_CONFIG.MAX_RADIUS - GAME_CONFIG.MIN_RADIUS) + GAME_CONFIG.MIN_RADIUS;
             let x = Math.random() * (canvas.width - radius * 2) + radius;
-            let y = canvas.height + radius + (Math.random() * 100); // Nacen abajo
+            let y = canvas.height + radius + (Math.random() * 100);
             
-            // 2. Crear objeto limpio
             state.objects.push(new Circle(x, y, radius, state.currentLevel));
             state.spawnedInLevel++;
         }
@@ -239,7 +280,6 @@ function spawnEnemies() {
 }
 
 function checkLevelStatus() {
-    // Si ya nacieron todos y ya no queda ninguno vivo en pantalla
     if (state.spawnedInLevel === GAME_CONFIG.GROUP_SIZE && state.objects.length === 0) {
         if (state.currentLevel < state.totalLevels) {
             state.currentLevel++;
@@ -259,11 +299,19 @@ function animate() {
 
     spawnEnemies();
 
-    // Actualizar objetos
+    // 1. Actualizar burbujas
     state.objects.forEach(obj => obj.update(state.objects));
-
-    // Limpieza de objetos marcados
     state.objects = state.objects.filter(obj => !obj.markedForDeletion);
+
+    // 2. Actualizar partículas (Efectos Visuales)
+    state.particles.forEach((particle, index) => {
+        if (particle.opacity <= 0) {
+            // Eliminar partículas invisibles para no saturar memoria
+            state.particles.splice(index, 1);
+        } else {
+            particle.update();
+        }
+    });
 
     checkLevelStatus();
 }
