@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Bubble Game</title>
+    <title>BubbleHunter 2D - Cyber Arcade</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light">
+<body class="d-flex flex-column min-vh-100">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="#">BubbleHunter 2D</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -26,41 +30,47 @@
 
     <div class="container my-4 flex-grow-1">
         <div class="row">
+            
             <div class="col-md-3 mb-3">
                 <div class="card shadow-sm h-100">
-                    <div class="card-header bg-dark text-white">Estadísticas</div>
+                    <div class="card-header">Estadísticas</div>
                     <div class="card-body">
-                        <h5 class="card-title text-primary">Nivel: <span id="level-display">1</span>/15</h5>
+                        <h5 class="card-title">Nivel: <span id="level-display">1</span>/15</h5>
                         <hr>
                         <p class="card-text">Eliminados: <span id="score-display" class="fw-bold">0</span></p>
-                        <p class="card-text">Progreso Total: <span id="percent-display" class="fw-bold">0%</span></p>
+                        
+                        <p class="card-text mt-3">Progreso Total: <span id="percent-display" class="fw-bold">0%</span></p>
+                        
                         <div class="progress mb-3">
-                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
                         </div>
-                        <div class="alert alert-info small">
-                            <i class="bi bi-info-circle"></i> Haz clic en los círculos para eliminarlos.
+                        
+                        <div class="alert alert-info small bg-transparent text-white border-info">
+                            <i class="bi bi-info-circle"></i> Haz clic en los círculos para eliminarlos. ¡Haz combos!
                         </div>
-                        <button id="restart-btn" class="btn btn-outline-danger w-100 mt-2" style="display:none;">Reiniciar</button>
+                        
+                        <button id="restart-btn" class="btn btn-outline-danger w-100 mt-2" style="display:none;">Reiniciar Sistema</button>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-9">
-                <div class="canvas-container shadow bg-white rounded border position-relative">
+                <div class="canvas-container shadow rounded border position-relative">
                     <canvas id="gameCanvas"></canvas>
+                    
                     <div id="game-overlay" class="position-absolute top-50 start-50 translate-middle text-center" style="display: none;">
-                        <h2 class="display-4 fw-bold text-success">¡Juego Terminado!</h2>
-                        <button class="btn btn-primary btn-lg mt-3" onclick="location.reload()">Jugar de nuevo</button>
+                        <h2 class="display-4 fw-bold">¡MISIÓN CUMPLIDA!</h2>
+                        <button class="btn btn-primary btn-lg mt-3" onclick="location.reload()">REINICIAR MISION</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-dark text-white text-center py-3 mt-auto">
+    <footer class="text-white text-center py-3 mt-auto">
         <div class="container">
             <p class="mb-1">Desarrollado por: <strong>LUIS ENRIQUE CABRERA GARCIA</strong></p>
-            <small class="text-white-50">&copy; 2024 Proyecto Web Canvas. Todos los derechos reservados.</small>
+            <small class="text-white-50">&copy; 2024 BubbleHunter Project. Todos los derechos reservados.</small>
         </div>
     </footer>
 
