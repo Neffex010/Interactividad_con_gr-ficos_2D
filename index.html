@@ -9,6 +9,8 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="css/style.css">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔵</text></svg>">
@@ -39,7 +41,11 @@
                     <div class="card-body">
                         <h5 class="card-title">Nivel: <span id="level-display">1</span>/15</h5>
                         <hr>
-                        <p class="card-text">Eliminados: <span id="score-display" class="fw-bold">0</span></p>
+                        <p class="card-text">🏆 Récord: <span id="high-score-display" class="fw-bold text-warning">0</span></p>
+                        
+                        <p class="card-text">Puntos: <span id="score-display" class="fw-bold">0</span></p>
+
+                        <div class="card-text mb-3">Vidas: <span id="lives-display" class="fw-bold text-danger">❤️❤️❤️</span></div>
                         
                         <p class="card-text mt-3">Progreso Total: <span id="percent-display" class="fw-bold">0%</span></p>
                         
@@ -48,9 +54,11 @@
                         </div>
                         
                         <div class="alert alert-info small bg-transparent text-white border-info">
-                            <i class="bi bi-info-circle"></i> Haz clic en los círculos para eliminarlos. ¡Haz combos!
+                            <i class="bi bi-info-circle"></i> Haz clic en los círculos para eliminarlos. ¡Haz combos para sumar más puntos!
                         </div>
                         
+                        <button id="mute-btn" class="btn btn-outline-warning w-100 mt-1">🔊 Sonido</button>
+                        <button id="pause-btn" class="btn btn-outline-info w-100 mt-2">⏸️ Pausa</button>
                         <button id="restart-btn" class="btn btn-outline-danger w-100 mt-2" style="display:none;">Reiniciar Sistema</button>
                     </div>
                 </div>
@@ -62,7 +70,13 @@
                     
                     <div id="game-overlay" class="position-absolute top-50 start-50 translate-middle text-center" style="display: none;">
                         <h2 class="display-4 fw-bold">¡MISIÓN CUMPLIDA!</h2>
-                        <button class="btn btn-primary btn-lg mt-3" onclick="location.reload()">REINICIAR MISION</button>
+                        <button id="overlay-restart-btn" class="btn btn-primary btn-lg mt-3">REINICIAR MISION</button>
+                    </div>
+
+                    <div id="game-over-overlay" class="position-absolute top-50 start-50 translate-middle text-center" style="display: none;">
+                        <h2 class="display-4 fw-bold">¡GAME OVER!</h2>
+                        <p class="lead text-white-50">Te quedaste sin vidas. ¡No dejes escapar burbujas!</p>
+                        <button id="game-over-restart-btn" class="btn btn-primary btn-lg mt-3">INTENTAR DE NUEVO</button>
                     </div>
                 </div>
             </div>
